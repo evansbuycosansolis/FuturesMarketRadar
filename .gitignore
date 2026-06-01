@@ -1,0 +1,40 @@
+# Dependencies and virtual environments
+.venv/
+**/.venv/
+node_modules/
+apps/web/node_modules/
+
+# Build and framework output
+.next/
+apps/web/.next/
+dist/
+build/
+
+# Python caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local databases and runtime files
+*.db
+*.sqlite
+*.sqlite3
+apps/api/*.db
+apps/api/*.sqlite3
+*.log
+
+# Local environment files. Never commit real API keys or webhook secrets.
+.env
+.env.*
+apps/api/.env
+apps/web/.env.local
+!*.env.example
+!apps/api/.env.example
+!apps/web/.env.local.example
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

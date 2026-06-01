@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+:root {
+  --background: #07110f;
+  --foreground: #eef8f4;
+  --radar-ink: #eef8f4;
+  --radar-muted: #99afa8;
+  --radar-paper: rgba(9, 18, 16, 0.84);
+  --radar-paper-strong: rgba(8, 16, 14, 0.94);
+  --radar-panel: rgba(18, 32, 28, 0.88);
+  --radar-panel-soft: rgba(16, 28, 24, 0.74);
+  --radar-line: rgba(238, 248, 244, 0.08);
+  --radar-line-strong: rgba(74, 112, 100, 0.34);
+  --radar-track: rgba(238, 248, 244, 0.12);
+  --radar-mint: #163a31;
+  --radar-mint-soft: rgba(18, 58, 49, 0.52);
+  --radar-sun: #f4ad3d;
+  --radar-sea: #2eb79a;
+  --radar-rose: #ff7e73;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(244, 173, 61, 0.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(46, 183, 154, 0.12), transparent 30%),
+    radial-gradient(circle at 50% 120%, rgba(255, 126, 115, 0.12), transparent 32%),
+    linear-gradient(180deg, #07110f 0%, #091513 44%, #0d1a17 100%);
+  color: var(--foreground);
+  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(238, 248, 244, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(238, 248, 244, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 88%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.tradingview-widget-container__widget,
+.tradingview-widget-container__widget iframe {
+  display: block;
+  height: 100% !important;
+  width: 100% !important;
+  max-width: 100%;
+}
+
+@layer components {
+  .radar-shell {
+    @apply mx-auto w-full max-w-[1480px] px-4 sm:px-6 lg:px-8;
+  }
+
+  .radar-card {
+    @apply relative rounded-[30px] border shadow-[0_28px_100px_-42px_rgba(0,0,0,0.7)] backdrop-blur-xl;
+    border-color: var(--radar-line);
+    background: linear-gradient(180deg, rgba(13, 24, 21, 0.95) 0%, rgba(9, 18, 16, 0.88) 100%);
+  }
+
+  .radar-chip {
+    @apply inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--radar-muted)];
+    border-color: var(--radar-line-strong);
+    background-color: var(--radar-panel-soft);
+  }
+
+  .nav-link {
+    @apply rounded-full px-3 py-2 transition hover:text-[var(--radar-ink)];
+    &:hover {
+      background-color: var(--radar-panel-soft);
+    }
+  }
+
+  .nav-link-active {
+    @apply text-[var(--radar-ink)] shadow-sm;
+    background-color: var(--radar-panel);
+  }
+}
