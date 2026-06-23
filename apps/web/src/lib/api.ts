@@ -1,16 +1,22 @@
 import {
   AutomationActionResponse,
   AutomationMode,
+  AssetResearchResponse,
   AutomationSummary,
   ArmManagedExitRequest,
   ArmManagedExitResponse,
   DisarmManagedExitResponse,
   ExchangeStatusResponse,
+  FuturesAnomalyResponse,
   HealthStatus,
   OrderExecutionResponse,
   CopilotOverview,
   ManualSignalRequest,
+  MarketChangeTrajectoryResponse,
+  MarketOverviewResponse,
   MarketIntelligenceSummary,
+  MarketQualityResponse,
+  MarketSessionMomentumResponse,
   PaperSummary,
   Report,
   ReportHistoryResponse,
@@ -18,6 +24,7 @@ import {
   RiskSummary,
   RunExitAutomationResponse,
   SignalActionResponse,
+  SleepingGiantResponse,
   TradeCheckRequest,
   TradeCheckResponse,
   TradePlanRequest,
@@ -79,11 +86,47 @@ export async function getReportHistory(): Promise<Report[]> {
   return data.items;
 }
 
-export async function runScanNow(): Promise<Report> {
-  const data = await readJson<{ ok: boolean; report: Report }>("/api/scanner/run-now", {
+export async function getMarketOverview(): Promise<MarketOverviewResponse> {
+  return readJson<MarketOverviewResponse>("/api/market/overview?limit=120");
+}
+
+export async function getMarketQuality(): Promise<MarketQualityResponse> {
+  return readJson<MarketQualityResponse>("/api/market/quality");
+}
+
+export async function getMarketSessionMomentum(): Promise<MarketSessionMomentumResponse> {
+  return readJson<MarketSessionMomentumResponse>("/api/market/session-momentum?limit=40&lookback_hours=24");
+}
+
+export async function getMarketChangeTrajectory(): Promise<MarketChangeTrajectoryResponse> {
+  return readJson<MarketChangeTrajectoryResponse>("/api/market/change-trajectory?limit=20&lookback_hours=8");
+}
+
+export async function getSleepingGiants(
+  timeframe: "1H" | "4H" = "1H",
+  mode: "strict" | "recent" = "strict",
+): Promise<SleepingGiantResponse> {
+  return readJson<SleepingGiantResponse>(
+    `/api/market/sleeping-giants?limit=12&lookback_days=21&timeframe=${timeframe}&mode=${mode}`,
+  );
+}
+
+export async function getFuturesAnomalies(): Promise<FuturesAnomalyResponse> {
+  return readJson<FuturesAnomalyResponse>("/api/market/futures-anomalies?limit=12&lookback_hours=24&max_symbols=80");
+}
+
+export async function researchAsset(query: string): Promise<AssetResearchResponse> {
+  return readJson<AssetResearchResponse>("/api/research/asset", {
+    method: "POST",
+    body: JSON.stringify({ query }),
+  });
+}
+
+export async function runScanNow(): Promise<{ report: Report | null; message: string }> {
+  const data = await readJson<{ ok: boolean; report: Report | null; message?: string }>("/api/scanner/run-now", {
     method: "POST",
   });
-  return data.report;
+  return { report: data.report, message: data.message ?? "" };
 }
 
 export async function getRiskSummary(): Promise<RiskSummary> {

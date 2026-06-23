@@ -90,7 +90,7 @@ export function ReportHistoryCard({ report }: ReportHistoryCardProps) {
     report.top_quiet_rallies[0]?.symbol,
   ].filter(Boolean);
   const highlights = toSentences(report.summary).slice(0, 6);
-  const aiTakeaways = toSentences(report.ai_commentary).slice(1, 4);
+  const aiTakeaways = toSentences(report.ai_commentary).slice(0, 3);
   const snapshots = signalSnapshots(report);
 
   return (

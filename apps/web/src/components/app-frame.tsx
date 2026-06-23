@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 type AppFrameProps = {
-  current: "dashboard" | "reports" | "risk" | "tradingview";
+  current: "dashboard" | "markets" | "scanners" | "recovery-fade" | "research" | "reports" | "risk" | "calculators" | "tradingview";
   title: string;
   subtitle: string;
   actions?: ReactNode;
@@ -18,16 +18,31 @@ export function AppFrame({ current, title, subtitle, actions, children }: AppFra
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl space-y-4">
               <div className="flex flex-wrap items-center gap-3">
-                <span className="radar-chip">Personal Trading Manager</span>
+                <span className="radar-chip">Personal Trading Copilot</span>
                 <nav className="flex items-center gap-2 text-sm font-medium text-[var(--radar-muted)]">
                   <Link className={current === "dashboard" ? "nav-link nav-link-active" : "nav-link"} href="/dashboard">
                     Dashboard
+                  </Link>
+                  <Link className={current === "markets" ? "nav-link nav-link-active" : "nav-link"} href="/markets">
+                    Markets
+                  </Link>
+                  <Link className={current === "scanners" ? "nav-link nav-link-active" : "nav-link"} href="/scanners">
+                    Scanners
+                  </Link>
+                  <Link className={current === "recovery-fade" ? "nav-link nav-link-active" : "nav-link"} href="/recovery-fade">
+                    Recovery/Fade
+                  </Link>
+                  <Link className={current === "research" ? "nav-link nav-link-active" : "nav-link"} href="/research">
+                    Research
                   </Link>
                   <Link className={current === "reports" ? "nav-link nav-link-active" : "nav-link"} href="/reports">
                     Reports
                   </Link>
                   <Link className={current === "risk" ? "nav-link nav-link-active" : "nav-link"} href="/risk">
                     Risk
+                  </Link>
+                  <Link className={current === "calculators" ? "nav-link nav-link-active" : "nav-link"} href="/calculators">
+                    Calculators
                   </Link>
                   <Link className={current === "tradingview" ? "nav-link nav-link-active" : "nav-link"} href="/tradingview">
                     TradingView

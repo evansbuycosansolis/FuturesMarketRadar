@@ -80,6 +80,199 @@ export type ReportHistoryResponse = {
   items: Report[];
 };
 
+export type MarketOverviewResponse = {
+  latest_report_at: string | null;
+  latest_age_minutes: number | null;
+  is_stale: boolean;
+  data_source: string;
+  data_warning: string | null;
+  coin_cap: ScoreEntry[];
+  gainers: ScoreEntry[];
+  losers: ScoreEntry[];
+  futures: ScoreEntry[];
+};
+
+export type MarketSessionMomentumCell = {
+  session: "Asian" | "London" | "New York";
+  start_hour_utc: number;
+  end_hour_utc: number;
+  samples: number;
+  net_delta: number;
+  average_5m_delta: number;
+  direction: "up" | "down" | "flat" | "insufficient";
+};
+
+export type MarketSessionMomentumItem = {
+  symbol: string;
+  price: number;
+  latest_change_24h: number;
+  dominant_session: string;
+  summary: string;
+  sessions: MarketSessionMomentumCell[];
+};
+
+export type MarketSessionMomentumResponse = {
+  latest_report_at: string | null;
+  lookback_hours: number;
+  interval_minutes: number;
+  note: string;
+  items: MarketSessionMomentumItem[];
+};
+
+export type MarketChangeMomentumItem = {
+  symbol: string;
+  price: number;
+  anchor_price: number | null;
+  latest_change_24h: number;
+  previous_change_24h: number | null;
+  delta_5m: number | null;
+  delta_window: number | null;
+  price_delta_5m_pct: number | null;
+  price_delta_window_pct: number | null;
+  samples: number;
+  expected_samples: number | null;
+  sample_coverage_pct: number | null;
+  max_gap_minutes: number | null;
+  data_quality: "strong" | "partial" | "thin";
+  direction: "increasing" | "decreasing" | "flat" | "new";
+  strength: "strong" | "moderate" | "weak" | "none";
+  sparkline: number[];
+  latest_timestamp: string | null;
+  previous_timestamp: string | null;
+  dominant_session: string;
+  session_summary: string;
+  sessions: MarketSessionMomentumCell[];
+};
+
+export type MarketChangeTrajectoryResponse = {
+  latest_report_at: string | null;
+  lookback_hours: number;
+  interval_minutes: number;
+  improving: MarketChangeMomentumItem[];
+  fading: MarketChangeMomentumItem[];
+  note: string;
+};
+
+export type SleepingGiantSetup = {
+  symbol: string;
+  direction: "bullish" | "bearish";
+  awakening_phase: "watch" | "pressure_building" | "giant_awakening" | "liquidity_spike";
+  average_candle_size: number;
+  latest_candle_size: number;
+  median_candle_height_pct: number;
+  latest_candle_height_pct: number;
+  height_ratio: number;
+  volume_ratio: number;
+  body_strength: number;
+  two_candle_pressure: number;
+  range_burst_score: number;
+  volume_burst_score: number;
+  compression_score: number;
+  breakout_score: number;
+  volume_expansion_ratio: number;
+  range_expansion_ratio: number;
+  distance_from_box_breakout: number;
+  current_price: number;
+  timestamp: string | null;
+  score: number;
+  compression_candles: number;
+  box_high: number;
+  box_low: number;
+  notes: string[];
+};
+
+export type SleepingGiantResponse = {
+  latest_report_at: string | null;
+  timeframe: string;
+  lookback_days: number;
+  baseline_candles: number;
+  scanned_symbols: number;
+  candidates: SleepingGiantSetup[];
+  note: string;
+};
+
+export type FuturesAnomaly = {
+  symbol: string;
+  direction: "breakout" | "breakdown";
+  score: number;
+  current_price: number;
+  ret_1m: number;
+  ret_5m: number;
+  ret_15m: number;
+  z_move_5m: number;
+  volume_ratio_1m: number;
+  accel_score: number;
+  range_position_24h: number;
+  wick_signal: number;
+  order_imbalance: number;
+  isolation_bonus: number;
+  funding_extreme: number;
+  open_interest_change_pct: number;
+  liquidity_score: number;
+  timestamp: string | null;
+  reason_tags: string[];
+};
+
+export type FuturesAnomalyResponse = {
+  latest_report_at: string | null;
+  interval_seconds: number;
+  lookback_hours: number;
+  source: string;
+  top_breakouts: FuturesAnomaly[];
+  top_breakdowns: FuturesAnomaly[];
+  note: string;
+};
+
+export type MarketQualityCheck = {
+  name: string;
+  status: "pass" | "warn" | "fail";
+  detail: string;
+  metric: number | null;
+  threshold: number | null;
+};
+
+export type MarketQualityResponse = {
+  status: "healthy" | "degraded" | "unavailable";
+  score: number;
+  latest_report_at: string | null;
+  source: string;
+  checks: MarketQualityCheck[];
+  caveats: string[];
+};
+
+export type AssetResearchSource = {
+  title: string;
+  source: string;
+  url: string;
+};
+
+export type AssetResearchSession = {
+  matched_symbol: string | null;
+  dominant_session: string;
+  summary: string;
+  latest_change_24h: number | null;
+  sessions: MarketSessionMomentumCell[];
+};
+
+export type AssetResearchResponse = {
+  query: string;
+  normalized_query: string;
+  asset_type: string;
+  name: string;
+  symbol: string | null;
+  what: string;
+  who: string;
+  where: string;
+  when: string;
+  session_support: AssetResearchSession;
+  recent_themes: string[];
+  risk_notes: string[];
+  what_to_watch_next: string[];
+  confidence: number;
+  summary_text: string;
+  sources: AssetResearchSource[];
+};
+
 export type RiskPolicy = {
   id: number;
   name: string;

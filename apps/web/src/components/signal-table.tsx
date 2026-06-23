@@ -1,5 +1,6 @@
 import { ScoreEntry } from "@/lib/types";
 import { formatCompactNumber, formatPercent, formatPrice, scoreTone } from "@/lib/formatters";
+import { pionexFuturesUrl } from "@/lib/links";
 
 type SignalTableProps = {
   title: string;
@@ -65,7 +66,16 @@ export function SignalTable({ title, description, items }: SignalTableProps) {
                 <tr className="border-t border-[color:var(--radar-line)] align-top" key={item.symbol}>
                   <td className="px-6 py-4 sm:px-8">
                     <div className="space-y-1">
-                      <div className="font-semibold text-[var(--radar-ink)]">{item.symbol}</div>
+                      <a
+                        className="inline-flex max-w-[220px] items-center gap-2 font-semibold text-[var(--radar-ink)] underline-offset-4 transition hover:text-[var(--radar-sea)] hover:underline focus:outline-none focus-visible:rounded-md focus-visible:ring-2 focus-visible:ring-[var(--radar-sea)]"
+                        href={pionexFuturesUrl(item.symbol)}
+                        rel="noreferrer"
+                        target="_blank"
+                        title={`Open ${item.symbol} on Pionex`}
+                      >
+                        <span className="truncate">{item.symbol}</span>
+                        <span className="text-xs opacity-70">open</span>
+                      </a>
                       <div className="font-mono text-xs text-[var(--radar-muted)]">
                         ATR {item.atr_percent.toFixed(2)}% · Green {Math.round(item.green_candle_ratio * 100)}%
                       </div>

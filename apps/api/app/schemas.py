@@ -96,12 +96,217 @@ class ExchangeStatusResponse(BaseModel):
 
 class RunScanResponse(BaseModel):
     ok: bool
-    report: ReportRead
+    report: ReportRead | None = None
+    message: str = ""
 
 
 class SymbolListResponse(BaseModel):
     total: int
     items: list[SymbolRead]
+
+
+class MarketOverviewResponse(BaseModel):
+    latest_report_at: datetime | None
+    latest_age_minutes: float | None = None
+    is_stale: bool = False
+    data_source: str = "pionex-public-api"
+    data_warning: str | None = None
+    coin_cap: list[ScoreEntry]
+    gainers: list[ScoreEntry]
+    losers: list[ScoreEntry]
+    futures: list[ScoreEntry]
+
+
+class MarketChangeMomentumRead(BaseModel):
+    symbol: str
+    price: float
+    anchor_price: float | None = None
+    latest_change_24h: float
+    previous_change_24h: float | None
+    delta_5m: float | None
+    delta_window: float | None
+    price_delta_5m_pct: float | None = None
+    price_delta_window_pct: float | None = None
+    samples: int
+    expected_samples: int | None = None
+    sample_coverage_pct: float | None = None
+    max_gap_minutes: float | None = None
+    data_quality: Literal["strong", "partial", "thin"] = "thin"
+    direction: Literal["increasing", "decreasing", "flat", "new"]
+    strength: Literal["strong", "moderate", "weak", "none"]
+    sparkline: list[float] = Field(default_factory=list)
+    latest_timestamp: datetime | None
+    previous_timestamp: datetime | None
+    dominant_session: str = "Waiting"
+    session_summary: str = ""
+    sessions: list["MarketSessionMomentumCellRead"] = Field(default_factory=list)
+
+
+class MarketChangeMomentumResponse(BaseModel):
+    latest_report_at: datetime | None
+    interval_minutes: int
+    lookback_samples: int
+    items: list[MarketChangeMomentumRead]
+
+
+class MarketChangeTrajectoryResponse(BaseModel):
+    latest_report_at: datetime | None
+    lookback_hours: int
+    interval_minutes: int
+    improving: list[MarketChangeMomentumRead]
+    fading: list[MarketChangeMomentumRead]
+    note: str
+
+
+class MarketSessionMomentumCellRead(BaseModel):
+    session: Literal["Asian", "London", "New York"]
+    start_hour_utc: int
+    end_hour_utc: int
+    samples: int
+    net_delta: float
+    average_5m_delta: float
+    direction: Literal["up", "down", "flat", "insufficient"]
+
+
+class MarketSessionMomentumRead(BaseModel):
+    symbol: str
+    price: float
+    latest_change_24h: float
+    dominant_session: str
+    summary: str
+    sessions: list[MarketSessionMomentumCellRead]
+
+
+class MarketSessionMomentumResponse(BaseModel):
+    latest_report_at: datetime | None
+    lookback_hours: int
+    interval_minutes: int
+    note: str
+    items: list[MarketSessionMomentumRead]
+
+
+class SleepingGiantSetupRead(BaseModel):
+    symbol: str
+    direction: Literal["bullish", "bearish"]
+    awakening_phase: Literal["watch", "pressure_building", "giant_awakening", "liquidity_spike"]
+    average_candle_size: float
+    latest_candle_size: float
+    median_candle_height_pct: float
+    latest_candle_height_pct: float
+    height_ratio: float
+    volume_ratio: float
+    body_strength: float
+    two_candle_pressure: float
+    range_burst_score: float
+    volume_burst_score: float
+    compression_score: float
+    breakout_score: float
+    volume_expansion_ratio: float
+    range_expansion_ratio: float
+    distance_from_box_breakout: float
+    current_price: float
+    timestamp: datetime | None
+    score: float
+    compression_candles: int
+    box_high: float
+    box_low: float
+    notes: list[str] = Field(default_factory=list)
+
+
+class SleepingGiantResponse(BaseModel):
+    latest_report_at: datetime | None
+    timeframe: str
+    lookback_days: int
+    baseline_candles: int
+    scanned_symbols: int
+    candidates: list[SleepingGiantSetupRead]
+    note: str
+
+
+class FuturesAnomalyRead(BaseModel):
+    symbol: str
+    direction: Literal["breakout", "breakdown"]
+    score: float
+    current_price: float
+    ret_1m: float
+    ret_5m: float
+    ret_15m: float
+    z_move_5m: float
+    volume_ratio_1m: float
+    accel_score: float
+    range_position_24h: float
+    wick_signal: float
+    order_imbalance: float
+    isolation_bonus: float
+    funding_extreme: float
+    open_interest_change_pct: float
+    liquidity_score: float
+    timestamp: datetime | None
+    reason_tags: list[str] = Field(default_factory=list)
+
+
+class FuturesAnomalyResponse(BaseModel):
+    latest_report_at: datetime | None
+    interval_seconds: int
+    lookback_hours: int
+    source: str
+    top_breakouts: list[FuturesAnomalyRead]
+    top_breakdowns: list[FuturesAnomalyRead]
+    note: str
+
+
+class MarketQualityCheckRead(BaseModel):
+    name: str
+    status: Literal["pass", "warn", "fail"]
+    detail: str
+    metric: float | None = None
+    threshold: float | None = None
+
+
+class MarketQualityResponse(BaseModel):
+    status: Literal["healthy", "degraded", "unavailable"]
+    score: float
+    latest_report_at: datetime | None
+    source: str
+    checks: list[MarketQualityCheckRead]
+    caveats: list[str] = Field(default_factory=list)
+
+
+class AssetResearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=120)
+
+
+class AssetResearchSourceRead(BaseModel):
+    title: str
+    source: str
+    url: str
+
+
+class AssetResearchSessionRead(BaseModel):
+    matched_symbol: str | None
+    dominant_session: str
+    summary: str
+    latest_change_24h: float | None = None
+    sessions: list[MarketSessionMomentumCellRead] = Field(default_factory=list)
+
+
+class AssetResearchResponse(BaseModel):
+    query: str
+    normalized_query: str
+    asset_type: str
+    name: str
+    symbol: str | None
+    what: str
+    who: str
+    where: str
+    when: str
+    session_support: AssetResearchSessionRead
+    recent_themes: list[str] = Field(default_factory=list)
+    risk_notes: list[str] = Field(default_factory=list)
+    what_to_watch_next: list[str] = Field(default_factory=list)
+    confidence: float
+    summary_text: str
+    sources: list[AssetResearchSourceRead] = Field(default_factory=list)
 
 
 class ReportHistoryResponse(BaseModel):

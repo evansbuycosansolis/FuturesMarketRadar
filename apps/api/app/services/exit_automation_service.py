@@ -17,6 +17,14 @@ from .private_pionex_client import PionexAccountDetail, PionexOpenOrder, Private
 ACTIVE_EXIT_STATUSES = {"pending_fill", "armed", "exit_submitted"}
 
 
+def ensure_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 @dataclass(slots=True)
 class ExitAutomationRunResult:
     plans_checked: int = 0
@@ -425,8 +433,9 @@ class ExitAutomationService:
         if plan.exit_order_id and plan.exit_order_id in open_order_ids:
             return None
 
-        retry_ready = plan.last_exit_attempt_at is None or (
-            now - plan.last_exit_attempt_at
+        last_exit_attempt_at = ensure_utc(plan.last_exit_attempt_at)
+        retry_ready = last_exit_attempt_at is None or (
+            now - last_exit_attempt_at
         ).total_seconds() >= self._settings.exit_automation_retry_cooldown_seconds
         if not retry_ready:
             return None

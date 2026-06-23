@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .db import init_db
-from .routes import automation, copilot, exchanges, health, intelligence, market, reports, risk, trading, webhooks
+from .routes import automation, copilot, exchanges, health, intelligence, market, reports, research, risk, trading, webhooks
 from .services.automation_service import AutomationService
 from .services.ai_report_agent import AiReportAgent
 from .services.exit_automation_service import ExitAutomationService
@@ -171,6 +171,7 @@ app.include_router(exchanges.router, prefix=settings.api_prefix)
 app.include_router(intelligence.router, prefix=settings.api_prefix)
 app.include_router(market.router, prefix=settings.api_prefix)
 app.include_router(reports.router, prefix=settings.api_prefix)
+app.include_router(research.router, prefix=settings.api_prefix)
 app.include_router(risk.router, prefix=settings.api_prefix)
 app.include_router(trading.router, prefix=settings.api_prefix)
 app.include_router(automation.router, prefix=settings.api_prefix)
