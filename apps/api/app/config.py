@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     scanner_max_symbols: int = 120
     scanner_min_quote_volume: float = 50_000.0
     scanner_quote_assets: str = "USDT"
+    market_data_source: str = "chromium"
+    chromium_market_url: str = "https://www.pionex.com/en/market/main/futures"
+    chromium_executable_path: str = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    chromium_market_row_limit: int = 80
+    chromium_market_timeout_seconds: float = 60.0
     run_initial_scan: bool = True
     enable_market_intelligence: bool = True
     run_initial_market_intelligence: bool = False

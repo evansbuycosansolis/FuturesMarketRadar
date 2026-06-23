@@ -46,6 +46,14 @@ AUTOMATION_ALERT_CODES = {
 ACTIVE_EXIT_STATUSES = {"pending_fill", "armed", "exit_submitted"}
 
 
+def ensure_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 @dataclass(slots=True)
 class NormalizedSignal:
     source: str
@@ -368,7 +376,8 @@ class AutomationService:
                 )
 
             if latest_snapshot is not None:
-                age = (now - latest_snapshot.snapshot_time).total_seconds()
+                snapshot_time = ensure_utc(latest_snapshot.snapshot_time)
+                age = (now - snapshot_time).total_seconds() if snapshot_time is not None else 0.0
                 if age > self._settings.automation_sync_stale_seconds:
                     active_codes.add("SYNC_STALE")
                     self._upsert_alert(
@@ -689,7 +698,10 @@ class AutomationService:
                 if latest_snapshot is None:
                     blockers.append("No synced account snapshot is available for unattended execution.")
                 else:
-                    age_seconds = (datetime.now(timezone.utc) - latest_snapshot.snapshot_time).total_seconds()
+                    snapshot_time = ensure_utc(latest_snapshot.snapshot_time)
+                    age_seconds = (
+                        datetime.now(timezone.utc) - snapshot_time
+                    ).total_seconds() if snapshot_time is not None else 0.0
                     if age_seconds > self._settings.automation_sync_stale_seconds:
                         blockers.append(
                             f"Account sync is stale by {age_seconds:.0f}s, which breaches the automation circuit breaker."
@@ -770,6 +782,7 @@ class AutomationService:
             db.commit()
 
     def _event_age_seconds(self, event_time: datetime | None, now: datetime) -> float | None:
+        event_time = ensure_utc(event_time)
         if event_time is None:
             return None
         return (now - event_time).total_seconds()

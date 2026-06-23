@@ -43,6 +43,14 @@ from .risk_policy_service import RiskPolicyService
 from .exit_automation_service import model_to_managed_exit_schema
 
 
+def ensure_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 @dataclass(slots=True)
 class RiskSyncStatus:
     running: bool = False
@@ -90,12 +98,14 @@ class RiskService:
             try:
                 with SessionLocal() as db:
                     latest_snapshot = self._latest_account_snapshot(db)
+                latest_snapshot_time = ensure_utc(latest_snapshot.snapshot_time) if latest_snapshot else None
                 if (
                     not force
                     and latest_snapshot is not None
-                    and (now - latest_snapshot.snapshot_time).total_seconds() < self._settings.risk_sync_min_interval_seconds
+                    and latest_snapshot_time is not None
+                    and (now - latest_snapshot_time).total_seconds() < self._settings.risk_sync_min_interval_seconds
                 ):
-                    self._status.last_run_completed_at = latest_snapshot.snapshot_time
+                    self._status.last_run_completed_at = latest_snapshot_time
                     return latest_snapshot
 
                 account_detail = await self._private_client.get_account_detail()

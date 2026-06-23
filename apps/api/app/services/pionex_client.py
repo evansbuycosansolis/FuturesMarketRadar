@@ -175,6 +175,24 @@ class PionexClient:
             for item in data.get("tickers", [])
         ]
 
+    async def get_ticker(self, symbol: str) -> PionexTicker | None:
+        data = await self._get("/api/v1/market/tickers", params={"symbol": symbol})
+        tickers = data.get("tickers", [])
+        if not tickers:
+            return None
+        item = tickers[0]
+        return PionexTicker(
+            symbol=item["symbol"],
+            time=int(item.get("time", 0)),
+            open=to_float(item.get("open")),
+            close=to_float(item.get("close")),
+            high=to_float(item.get("high")),
+            low=to_float(item.get("low")),
+            volume=to_float(item.get("volume")),
+            amount=to_float(item.get("amount")),
+            count=int(item.get("count", 0)),
+        )
+
     async def get_open_interests(self) -> dict[str, float]:
         data = await self._get("/api/v1/market/openInterests")
         return {

@@ -12,6 +12,7 @@ from ..db import SessionLocal
 from .. import models
 from .ai_report_agent import AiReportAgent
 from .pionex_client import PionexClient, PionexClientError, PionexKline, PionexSymbolInfo, PionexTicker
+from .pionex_chromium_scraper import PionexChromiumScraper, PionexChromiumScraperError
 from .report_service import ReportService
 from .scoring import ScoredCoin, ScoringService
 
@@ -37,6 +38,7 @@ class RadarScanner:
             watchlist_threshold=settings.watchlist_threshold,
         )
         self._reports = ReportService(settings, AiReportAgent(settings))
+        self._chromium_scraper = PionexChromiumScraper(settings)
 
     @property
     def status(self) -> ScannerStatus:
@@ -49,21 +51,21 @@ class RadarScanner:
             self._status.last_error = None
 
             try:
-                symbols = await self._client.get_symbols()
-                tickers = await self._client.get_tickers()
-                open_interests = await self._client.get_open_interests()
+                symbols, tickers = await self._load_market_board()
+                open_interests = await self._load_open_interests_optional()
                 ticker_map = {ticker.symbol: ticker for ticker in tickers}
 
                 with SessionLocal() as db:
                     self._upsert_symbols(db, symbols)
-                    scannable_symbols = self._select_universe(symbols, ticker_map)
+                    market_symbols = self._select_market_universe(symbols, ticker_map)
+                    scannable_symbols = self._select_universe(market_symbols, ticker_map)
                     previous_snapshots = self._load_previous_snapshots(db)
 
                 candle_map = await self._fetch_klines(scannable_symbols)
                 run_at = datetime.now(timezone.utc)
 
                 scored_coins: list[ScoredCoin] = []
-                snapshots: list[models.MarketSnapshot] = []
+                snapshots = self._build_market_snapshots(market_symbols, ticker_map, open_interests, run_at)
                 for symbol_info in scannable_symbols:
                     ticker = ticker_map.get(symbol_info.symbol)
                     candles = candle_map.get(symbol_info.symbol)
@@ -81,22 +83,13 @@ class RadarScanner:
                         candles=candles,
                     )
                     scored_coins.append(scored)
-                    snapshots.append(
-                        models.MarketSnapshot(
-                            symbol=scored.symbol,
-                            price=scored.price,
-                            price_change_24h=scored.price_change_24h,
-                            volume_24h=scored.volume_24h,
-                            quote_volume_24h=scored.quote_volume_24h,
-                            high_24h=scored.high_24h,
-                            low_24h=scored.low_24h,
-                            open_interest=scored.open_interest,
-                            timestamp=run_at,
-                        )
-                    )
 
                 if not scored_coins:
-                    raise RuntimeError("The scanner did not produce any scored markets.")
+                    with SessionLocal() as db:
+                        db.add_all(snapshots)
+                        db.commit()
+                    self._status.last_run_completed_at = datetime.now(timezone.utc)
+                    return None
 
                 report_payload = self._reports.build_report(run_at, scored_coins, reason)
                 score_rows = [
@@ -182,6 +175,75 @@ class RadarScanner:
                 )
         db.commit()
 
+    async def _load_symbols_with_cache_fallback(self) -> list[PionexSymbolInfo]:
+        try:
+            return await self._client.get_symbols()
+        except PionexClientError:
+            with SessionLocal() as db:
+                cached_symbols = db.scalars(select(models.Symbol)).all()
+                if not cached_symbols:
+                    raise
+                return [
+                    PionexSymbolInfo(
+                        symbol=row.symbol,
+                        name=row.name,
+                        base_currency=row.base_asset,
+                        quote_currency=row.quote_asset,
+                        market_type=row.market_type,
+                        status=row.status,
+                    )
+                    for row in cached_symbols
+                ]
+
+    async def _load_open_interests_optional(self) -> dict[str, float]:
+        try:
+            return await self._client.get_open_interests()
+        except PionexClientError:
+            return {}
+
+    async def _load_market_board(self) -> tuple[list[PionexSymbolInfo], list[PionexTicker]]:
+        if self._settings.market_data_source.lower() in {"chromium", "pionex_chromium"}:
+            try:
+                scraped = await self._chromium_scraper.scrape_futures_movers()
+                return scraped.symbols, scraped.tickers
+            except PionexChromiumScraperError:
+                pass
+
+        symbols = await self._load_symbols_with_cache_fallback()
+        tickers = await self._load_tickers_with_fallback(symbols)
+        return symbols, tickers
+
+    async def _load_tickers_with_fallback(self, symbols: list[PionexSymbolInfo]) -> list[PionexTicker]:
+        try:
+            return await self._client.get_tickers()
+        except PionexClientError as exc:
+            if not exc.is_rate_limited:
+                raise
+
+        semaphore = asyncio.Semaphore(max(1, min(4, self._settings.pionex_max_concurrent_requests)))
+        cached_symbols = [
+            symbol
+            for symbol in symbols
+            if symbol.status == "TRADING" and symbol.quote_currency.upper() in self._settings.quote_assets
+        ]
+
+        async def fetch_one(index: int, symbol: PionexSymbolInfo) -> PionexTicker | None:
+            async with semaphore:
+                await asyncio.sleep(index * 0.08)
+                try:
+                    return await self._client.get_ticker(symbol.symbol)
+                except PionexClientError:
+                    return None
+
+        results = await asyncio.gather(*(fetch_one(index, symbol) for index, symbol in enumerate(cached_symbols)))
+        tickers = [ticker for ticker in results if ticker is not None]
+        if not tickers:
+            raise PionexClientError(
+                "Pionex ticker refresh failed: all-market and symbol-by-symbol fallback were rate-limited.",
+                status_code=429,
+            )
+        return tickers
+
     def _select_universe(
         self,
         symbols: list[PionexSymbolInfo],
@@ -197,6 +259,48 @@ class RadarScanner:
         ]
         liquid_symbols.sort(key=lambda symbol: ticker_map[symbol.symbol].amount, reverse=True)
         return liquid_symbols[: self._settings.scanner_max_symbols]
+
+    def _select_market_universe(
+        self,
+        symbols: list[PionexSymbolInfo],
+        ticker_map: dict[str, PionexTicker],
+    ) -> list[PionexSymbolInfo]:
+        market_symbols = [
+            symbol
+            for symbol in symbols
+            if symbol.status == "TRADING"
+            and symbol.quote_currency.upper() in self._settings.quote_assets
+            and ticker_map.get(symbol.symbol)
+        ]
+        market_symbols.sort(key=lambda symbol: ticker_map[symbol.symbol].price_change_24h, reverse=True)
+        return market_symbols
+
+    def _build_market_snapshots(
+        self,
+        symbols: list[PionexSymbolInfo],
+        ticker_map: dict[str, PionexTicker],
+        open_interests: dict[str, float],
+        run_at: datetime,
+    ) -> list[models.MarketSnapshot]:
+        snapshots: list[models.MarketSnapshot] = []
+        for symbol_info in symbols:
+            ticker = ticker_map.get(symbol_info.symbol)
+            if ticker is None:
+                continue
+            snapshots.append(
+                models.MarketSnapshot(
+                    symbol=symbol_info.symbol,
+                    price=ticker.close,
+                    price_change_24h=ticker.price_change_24h,
+                    volume_24h=ticker.volume,
+                    quote_volume_24h=ticker.amount,
+                    high_24h=ticker.high,
+                    low_24h=ticker.low,
+                    open_interest=open_interests.get(symbol_info.symbol, 0.0),
+                    timestamp=run_at,
+                )
+            )
+        return snapshots
 
     def _load_previous_snapshots(self, db: Session) -> dict[str, models.MarketSnapshot]:
         latest_snapshot_time = db.scalar(select(func.max(models.MarketSnapshot.timestamp)))

@@ -19,9 +19,58 @@ function modeLabel(mode: string): string {
 
 type ExchangeStatusPanelProps = {
   status: ExchangeStatusResponse;
+  compact?: boolean;
 };
 
-export function ExchangeStatusPanel({ status }: ExchangeStatusPanelProps) {
+export function ExchangeStatusPanel({ status, compact = false }: ExchangeStatusPanelProps) {
+  if (compact) {
+    return (
+      <div className="rounded-[22px] border border-[color:var(--radar-line)] bg-black/15 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="radar-chip">Exchange Control</div>
+            <div className="mt-2 text-sm font-semibold text-[var(--radar-ink)]">Personal trading connections</div>
+          </div>
+          <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${modeTone(status.global_trading_enabled ? "live_enabled" : "guardrail")}`}>
+            {status.global_trading_enabled ? "Live switch on" : "Live switch off"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          {status.exchanges.map((exchange) => (
+            <article
+              className="rounded-[18px] border border-[color:var(--radar-line)] bg-[var(--radar-panel-soft)] p-4 transition hover:border-[color:var(--radar-line-strong)]"
+              key={exchange.exchange}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold tracking-tight text-[var(--radar-ink)]">{exchange.label}</h3>
+                  <p className="mt-1 break-all font-mono text-[10px] text-[var(--radar-muted)]">{exchange.base_url}</p>
+                </div>
+                <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${modeTone(exchange.mode)}`}>
+                  {modeLabel(exchange.mode)}
+                </span>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                {[
+                  ["Enabled", exchange.enabled ? "Yes" : "No"],
+                  ["Keys", exchange.configured ? "Ready" : "Missing"],
+                  ["Execution", exchange.execution_available ? "Ready" : "Locked"],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-[12px] border border-[color:var(--radar-line)] bg-black/15 p-2">
+                    <div className="text-[9px] uppercase tracking-[0.12em] text-[var(--radar-muted)]">{label}</div>
+                    <div className="mt-1 font-semibold text-[var(--radar-ink)]">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="radar-card p-6 sm:p-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
