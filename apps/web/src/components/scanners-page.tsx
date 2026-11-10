@@ -1,8 +1,9 @@
 import { AppFrame } from "@/components/app-frame";
 import { FuturesAnomalyPanel } from "@/components/futures-anomaly-panel";
+import { OneHourSpikePanel } from "@/components/one-hour-spike-panel";
 import { ScannersAutoRefresh } from "@/components/scanners-auto-refresh";
 import { SleepingGiantsPanel } from "@/components/sleeping-giants-panel";
-import { getFuturesAnomalies, getSleepingGiants } from "@/lib/api";
+import { getFuturesAnomalies, getOneHourSpikes, getSleepingGiants } from "@/lib/api";
 
 export async function ScannersPage() {
   const fallbackSleepingGiants = (timeframe: "1H" | "4H") => ({
@@ -28,6 +29,15 @@ export async function ScannersPage() {
     top_breakdowns: [],
     note: "The anomaly scoring endpoint is temporarily unavailable. Restart the API if this section stays empty.",
   }));
+  const oneHourSpikes = await getOneHourSpikes().catch(() => ({
+    latest_report_at: null,
+    interval_seconds: 300,
+    baseline_candles: 48,
+    scanned_symbols: 0,
+    candidates: [],
+    source: "1H spike endpoint unavailable.",
+    note: "The 1H spike monitor endpoint is temporarily unavailable. Restart the API if this section stays empty.",
+  }));
 
   return (
     <AppFrame
@@ -38,6 +48,8 @@ export async function ScannersPage() {
       <ScannersAutoRefresh />
 
       <FuturesAnomalyPanel data={futuresAnomalies} />
+
+      <OneHourSpikePanel data={oneHourSpikes} />
 
       <SleepingGiantsPanel data={sleepingGiants1h} />
 

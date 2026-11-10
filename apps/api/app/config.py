@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     app_name: str = "Futures Market Radar API"
     api_prefix: str = "/api"
+    desk_base_url: str = "http://127.0.0.1:8765"
     debug: bool = False
 
     pionex_base_url: str = "https://api.pionex.com"
@@ -62,6 +63,10 @@ class Settings(BaseSettings):
     report_timezone: str = "America/Toronto"
 
     enable_ai_commentary: bool = False
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4.1-mini"
+    openai_base_url: str = "https://api.openai.com"
+    openai_timeout_seconds: float = 30.0
     enable_private_api: bool = False
     enable_trading: bool = False
     enable_exit_automation: bool = False

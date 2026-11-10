@@ -17,6 +17,7 @@ __pycache__/
 .pytest_cache/
 
 # Local databases and runtime files
+desk.integration.json
 *.db
 *.sqlite
 *.sqlite3

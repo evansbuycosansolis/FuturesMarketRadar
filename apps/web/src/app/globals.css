@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07110f;
-  --foreground: #eef8f4;
-  --radar-ink: #eef8f4;
-  --radar-muted: #99afa8;
-  --radar-paper: rgba(9, 18, 16, 0.84);
-  --radar-paper-strong: rgba(8, 16, 14, 0.94);
-  --radar-panel: rgba(18, 32, 28, 0.88);
-  --radar-panel-soft: rgba(16, 28, 24, 0.74);
-  --radar-line: rgba(238, 248, 244, 0.08);
-  --radar-line-strong: rgba(74, 112, 100, 0.34);
-  --radar-track: rgba(238, 248, 244, 0.12);
-  --radar-mint: #163a31;
-  --radar-mint-soft: rgba(18, 58, 49, 0.52);
-  --radar-sun: #f4ad3d;
-  --radar-sea: #2eb79a;
-  --radar-rose: #ff7e73;
+  --background: #f7f8f5;
+  --foreground: #26362d;
+  --radar-ink: #26362d;
+  --radar-muted: #7c8978;
+  --radar-paper: #ffffff;
+  --radar-paper-strong: #ffffff;
+  --radar-panel: #edf2e7;
+  --radar-panel-soft: #f4f7ef;
+  --radar-line: #e3e8df;
+  --radar-line-strong: #cbd8c1;
+  --radar-track: #e7eddf;
+  --radar-mint: #dfedcf;
+  --radar-mint-soft: #eef5e7;
+  --radar-sun: #b9d881;
+  --radar-sea: #2e7859;
+  --radar-rose: #b95e53;
 }
 
 @theme inline {
@@ -33,11 +33,7 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(244, 173, 61, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(46, 183, 154, 0.12), transparent 30%),
-    radial-gradient(circle at 50% 120%, rgba(255, 126, 115, 0.12), transparent 32%),
-    linear-gradient(180deg, #07110f 0%, #091513 44%, #0d1a17 100%);
+  background: var(--background);
   color: var(--foreground);
   font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
 }
@@ -47,7 +43,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 0;
   background-image:
     linear-gradient(rgba(238, 248, 244, 0.035) 1px, transparent 1px),
     linear-gradient(90deg, rgba(238, 248, 244, 0.035) 1px, transparent 1px);
@@ -74,9 +70,9 @@ a {
   }
 
   .radar-card {
-    @apply relative rounded-[30px] border shadow-[0_28px_100px_-42px_rgba(0,0,0,0.7)] backdrop-blur-xl;
+    @apply relative rounded-xl border;
     border-color: var(--radar-line);
-    background: linear-gradient(180deg, rgba(13, 24, 21, 0.95) 0%, rgba(9, 18, 16, 0.88) 100%);
+    background: #ffffff;
   }
 
   .radar-chip {

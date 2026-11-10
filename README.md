@@ -1,5 +1,11 @@
 # Evans' Futures Trading Copilot
 
+## Integrated OpenAI workspace
+
+Double-click `Start-Integrated-Desk.cmd` to launch the sidebar-based workspace at `http://127.0.0.1:3000/desk`. It combines Radar's existing tools with the local Agentic OpenAI research desk, saved conversations, a Hyperliquid market lens, and explicitly sourced Radar evidence. The launcher starts with exchange execution and private sync disabled. See [Desk integration](DESK_INTEGRATION.md) for source-checkout configuration, service boundaries, and verification.
+
+The research runtime is included in `vendor/agentic`, with its MIT license and source attribution. After cloning this branch, install the backend requirements in a virtual environment and run `npm ci` in `apps/web`, then use the launcher. Your OpenAI key is configured locally through the desk connection settings or process environment. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
 Evans' Futures Trading Copilot is a personal Pionex futures trading management system. It is designed as a professional, risk-first dashboard for monitoring markets, reviewing deterministic signals, managing paper trades, checking risk, and controlling live-trading authority.
 
 This is not a reckless auto-trading bot. Live execution is locked behind explicit backend flags, deterministic risk checks, kill-switch controls, and supervised rollout steps.

@@ -255,6 +255,54 @@ class FuturesAnomalyResponse(BaseModel):
     note: str
 
 
+class OneHourSpikeRead(BaseModel):
+    symbol: str
+    direction: Literal["bullish", "bearish"]
+    score: float
+    current_price: float
+    latest_price_change_pct: float
+    latest_range_pct: float
+    baseline_range_pct: float
+    range_ratio: float
+    volume_ratio: float
+    latest_volume: float
+    baseline_volume: float
+    timestamp: datetime | None
+    reason_tags: list[str] = Field(default_factory=list)
+
+
+class OneHourSpikeResponse(BaseModel):
+    latest_report_at: datetime | None
+    interval_seconds: int
+    baseline_candles: int
+    scanned_symbols: int
+    candidates: list[OneHourSpikeRead]
+    source: str
+    note: str
+
+
+class SimulatorAnalyzeRequest(BaseModel):
+    symbol: str
+    side: Literal["long", "short"]
+    entry_type: Literal["market", "limit"]
+    entry_price: float
+    mark_price: float
+    margin: float
+    leverage: float
+    stop_loss: float | None = None
+    take_profit: float | None = None
+    order_type: Literal["maker", "taker"] = "taker"
+    timeframe: str = "15m"
+
+
+class SimulatorAnalyzeResponse(BaseModel):
+    symbol: str
+    model: str
+    used_ai: bool
+    analysis: str
+    warnings: list[str] = Field(default_factory=list)
+
+
 class MarketQualityCheckRead(BaseModel):
     name: str
     status: Literal["pass", "warn", "fail"]

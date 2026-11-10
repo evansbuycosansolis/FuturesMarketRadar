@@ -17,6 +17,7 @@ import {
   MarketIntelligenceSummary,
   MarketQualityResponse,
   MarketSessionMomentumResponse,
+  OneHourSpikeResponse,
   PaperSummary,
   Report,
   ReportHistoryResponse,
@@ -24,6 +25,8 @@ import {
   RiskSummary,
   RunExitAutomationResponse,
   SignalActionResponse,
+  SimulatorAnalyzeRequest,
+  SimulatorAnalyzeResponse,
   SleepingGiantResponse,
   TradeCheckRequest,
   TradeCheckResponse,
@@ -113,6 +116,17 @@ export async function getSleepingGiants(
 
 export async function getFuturesAnomalies(): Promise<FuturesAnomalyResponse> {
   return readJson<FuturesAnomalyResponse>("/api/market/futures-anomalies?limit=12&lookback_hours=24&max_symbols=80");
+}
+
+export async function getOneHourSpikes(): Promise<OneHourSpikeResponse> {
+  return readJson<OneHourSpikeResponse>("/api/market/one-hour-spikes?limit=20&max_symbols=160&baseline_candles=48");
+}
+
+export async function analyzeSimulatorSetup(payload: SimulatorAnalyzeRequest): Promise<SimulatorAnalyzeResponse> {
+  return readJson<SimulatorAnalyzeResponse>("/api/simulator/analyze", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function researchAsset(query: string): Promise<AssetResearchResponse> {

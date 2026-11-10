@@ -1,0 +1,21 @@
+# OpenAI research desk integration
+
+Double-click `Start-Integrated-Desk.cmd` to start the three local services and open `http://127.0.0.1:3000/desk`. Keep the launcher open; Ctrl+C stops only the services it started. The launcher needs Radar's installed Python virtual environment and frontend dependencies. A fresh clone uses the included `vendor/agentic` runtime; no second source checkout is needed. An optional external source checkout can be selected by the ignored, non-secret `desk.integration.json` file or by `python scripts/start_integrated_desk.py --desk-path "C:/path/to/agentic"`. Nothing is deployed by the launcher.
+
+The sidebar provides access to all existing Radar pages. Markets includes a **Discuss with desk** link that carries the selected Pionex symbol into a conversation. The Trading Desk page provides seven role passes, saved conversation selection, per-turn tool evidence and token counts, and session-only OpenAI connection settings. Saved conversations remain in the Agentic service's existing local database outside both repositories. The last selected conversation is remembered in browser session storage; API keys are not.
+
+The right panel separates Hyperliquid public observations from Radar's stored Pionex scanner and sourced sentiment evidence. Radar records retain their original timestamps and explicit freshness labels. Missing records remain unavailable. Symbol text is passed as context, not as proof that two exchange instruments are equivalent; unknown Hyperliquid markets fail visibly. Hyperliquid HIP-3 markets have no automatic Pionex mapping.
+
+The integration is a fixed-route bridge, not a generic API proxy. OpenAI can request public market reads, stop-cost estimates, desk skill text, bounded specialist consultations, and `/api/desk/evidence`. It cannot request Radar order placement, approval, cancellations, policy updates, managed exits, private account sync, or automation controls. Agentic calls use an allowlisted loopback origin, and the launcher starts its process without exchange credentials. Bridge mutations require the Agentic per-run token and a permitted browser origin. Connection state means a key is configured, not that provider access was verified.
+
+The integrated launcher explicitly disables Radar private API sync, live execution, Binance private integration, managed exits and exchange websocket monitoring for its session. Existing stored control values and local environment files are not edited. Initial public scans are not started automatically; scheduled public scans and research use Radar's existing configuration. The original Radar controls remain accessible as tools, but the research launcher does not enable live trading. It refuses occupied Radar ports rather than replacing another running session. An existing compatible Agentic service can be reused and is not stopped by the launcher.
+
+The Agentic service defaults to `http://127.0.0.1:8765`, Radar's API to port 8010, and the frontend to port 3000. `FMR_DESK_BASE_URL` selects another loopback Agentic origin; `AGENTIC_RADAR_URL` selects Radar's loopback API origin for the evidence tool. Standalone operation remains supported when the other service is unavailable.
+
+The required Agentic runtime, roles, skills and public-data scripts are bundled with their original notices in `vendor/agentic`; see [third-party notices](THIRD_PARTY_NOTICES.md). A source manifest records the copied bytes. Radar's scoring and strategy code is not copied into the portable desk instruction repository.
+
+Checks: `python -m unittest discover -s tests -p test_desk_integration.py` from `apps/api`, `python -m unittest local_app.test_journeys` from the Agentic checkout, and `npm run lint` plus `npm run build` from `apps/web`. No exchange action is used for validation.
+
+For the bundled runtime tests, run `python -m unittest local_app.test_journeys` from `vendor/agentic` instead of an external checkout.
+
+`python scripts/start_integrated_desk.py --check --no-browser` verifies service startup and then stops its own services. Windows cleanup includes child servers spawned by Python virtual-environment redirectors and Next.js. This startup check does not test OpenAI access or initiate an exchange action.

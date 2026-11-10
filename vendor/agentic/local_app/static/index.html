@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111b1a">
+  <title>Agentic | Trading Desk</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Agentic home"><span class="brand-icon">a<span>↗</span></span><span>agentic<span class="brand-sub">TRADING DESK</span></span></a>
+    <div class="workspace-label"><span class="live-dot"></span> LOCAL WORKSPACE <span class="version">01</span></div>
+    <button id="new-chat" class="new-chat"><span>＋</span> New conversation <span class="shortcut">↗</span></button>
+    <div class="section-label">YOUR DESK <span>07</span></div>
+    <nav id="roles" aria-label="Desk roles"></nav>
+    <div class="section-label history-label">CONVERSATIONS</div>
+    <div id="history" class="history" aria-label="Saved conversations"></div>
+    <div class="sidebar-bottom">
+      <div class="mode-card"><span class="mode-icon">◇</span><div>Research mode<small>Public data. No exchange writes.</small></div><span class="mode-dot"></span></div>
+      <button id="settings-open" class="settings-button"><span>⚙</span> Settings <span>↗</span></button>
+      <div class="credit">Built on HyperGrok Trading Desk<br>Andrew Wilkinson · Galleon Labs · MIT</div>
+    </div>
+  </aside>
+  <main>
+    <header class="topbar"><div><span class="breadcrumb">Workspace</span><span class="slash">/</span><strong>Trading floor</strong></div><div class="provider"><span id="provider-dot" class="status-dot"></span><span id="provider-label">OpenAI</span><span class="local-tag">LOCAL</span></div></header>
+    <section class="page-heading"><div><div class="eyebrow">YOUR INTELLIGENCE, ORGANIZED</div><h1>The trading floor<span>.</span></h1><p>Research the market. Test your thinking. Keep the evidence.</p></div><div class="heading-right"><span class="research-pill">◈ &nbsp; RESEARCH ONLY</span><span id="today"></span></div></section>
+    <section class="market-strip" aria-label="Market overview">
+      <div class="market-cell price-cell"><div class="metric-label"><span id="market-name">ETH-PERP</span><span class="source-tag">HYPERLIQUID</span></div><div class="price-line"><strong id="price">—</strong><span id="change" class="change">—</span></div><span class="metric-foot">Book midpoint · USD</span></div>
+      <div class="market-cell"><div class="metric-label">HOURLY FUNDING</div><strong id="funding">—</strong><span class="metric-foot">Current rate / hour</span></div>
+      <div class="market-cell"><div class="metric-label">OPEN INTEREST</div><strong id="oi">—</strong><span class="metric-foot">Notional value · USD</span></div>
+      <div class="market-cell"><div class="metric-label">BID–ASK SPREAD</div><strong id="spread">—</strong><span class="metric-foot">Basis points</span></div>
+    </section>
+    <div class="desk-grid">
+      <section class="chat-panel" aria-label="Desk conversation">
+        <div class="panel-heading"><div class="panel-title"><span class="panel-icon">▤</span><div><h2 id="chat-role">Desk Lead</h2><span id="role-description">Your point of contact on the floor</span></div></div><span class="assistant-label">OPENAI AGENT</span></div>
+        <div id="messages" class="messages" aria-live="polite"></div>
+        <div id="chat-error" class="inline-error hidden" role="alert"></div>
+        <form id="chat-form" class="composer"><label class="sr-only" for="message">Message the desk</label><textarea id="message" placeholder="Ask your desk a question…" rows="2" maxlength="8000"></textarea><div class="composer-bottom"><span><span class="mini-dot"></span><span id="composer-role">Desk Lead</span><span class="composer-divider">/</span><span id="composer-model">OpenAI</span></span><button id="send" type="submit" aria-label="Send message">Send <span>↗</span></button></div></form>
+        <div class="composer-note">Enter to send · Shift + Enter for a new line · AI output needs your review</div>
+      </section>
+      <aside class="context-column">
+        <section class="context-card market-context"><div class="card-title"><h2>Market lens</h2><span class="small-caps">PUBLIC DATA</span></div><form id="market-form" class="market-search"><label class="sr-only" for="coin">Market coin</label><input id="coin" value="ETH" maxlength="64" placeholder="ETH or xyz:TSLA" autocomplete="off"><button id="refresh-market" type="submit" aria-label="Refresh market">↻</button></form><div id="market-error" class="inline-error hidden" role="alert"></div><div class="depth-heading"><span>ORDER BOOK DEPTH</span><span>USD</span></div><div id="depth" class="depth"><div class="empty-depth">Loading public market data…</div></div><div class="depth-legend"><span><i class="bid-key"></i>Bids</span><span><i class="ask-key"></i>Asks</span></div><div class="market-details"><div><span>Mark price</span><strong id="mark">—</strong></div><div><span>Oracle price</span><strong id="oracle">—</strong></div><div><span>24h volume</span><strong id="volume">—</strong></div></div><div class="source-note"><span id="data-status" class="status-dot"></span><span id="observed">Waiting for a snapshot</span></div><p class="source-caption">Hyperliquid /info · mainnet<br>Snapshot on refresh. Partial depth is a floor.</p><details class="raw-evidence"><summary>Inspect source evidence</summary><pre id="raw-market">No snapshot loaded.</pre></details></section>
+        <section class="context-card workflow-card"><div class="card-title"><h2>A disciplined process</h2><span>↗</span></div><ol><li><span>01</span><div>Your idea<small>You bring the hypothesis.</small></div></li><li><span>02</span><div>Evidence & research<small>The desk checks the facts.</small></div></li><li><span>03</span><div>Risk & review<small>Assumptions stay explicit.</small></div></li></ol><p>This app supports research. Order execution and wallet connections are disabled.</p></section>
+      </aside>
+    </div>
+    <footer class="page-footer"><span>AGENTIC HYPERLIQUID TRADING DESK</span><span>Evidence first. Your decisions.</span></footer>
+  </main>
+  <dialog id="settings"><form id="settings-form"><div class="dialog-heading"><div><div class="eyebrow">WORKSPACE CONNECTION</div><h2>Connect OpenAI</h2></div><button id="settings-close" type="button" aria-label="Close settings">×</button></div><p>Your key is used by the local Python server. It stays in memory and is never saved in your browser or conversation database.</p><label for="api-key">OpenAI API key</label><input id="api-key" type="password" autocomplete="off" placeholder="sk-…" maxlength="512"><small id="key-state">Checking connection…</small><label for="model">Model ID</label><input id="model" value="gpt-5.4" maxlength="100" required><small>Use an OpenAI model with Responses API and function calling access.</small><div class="privacy-note">Messages, loaded instructions, and requested tool results are sent to OpenAI. Conversations are saved on this computer. API usage is billed to your OpenAI project; specialist consultations use additional requests.</div><div id="settings-error" class="inline-error hidden" role="alert"></div><div class="dialog-actions"><button id="disconnect" type="button" class="secondary">Disconnect key</button><button type="submit" class="primary" id="save-settings">Save connection ↗</button></div><p class="settings-storage" id="storage"></p></form></dialog>
+</body>
+</html>

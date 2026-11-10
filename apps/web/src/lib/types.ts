@@ -223,6 +223,54 @@ export type FuturesAnomalyResponse = {
   note: string;
 };
 
+export type OneHourSpike = {
+  symbol: string;
+  direction: "bullish" | "bearish";
+  score: number;
+  current_price: number;
+  latest_price_change_pct: number;
+  latest_range_pct: number;
+  baseline_range_pct: number;
+  range_ratio: number;
+  volume_ratio: number;
+  latest_volume: number;
+  baseline_volume: number;
+  timestamp: string | null;
+  reason_tags: string[];
+};
+
+export type OneHourSpikeResponse = {
+  latest_report_at: string | null;
+  interval_seconds: number;
+  baseline_candles: number;
+  scanned_symbols: number;
+  candidates: OneHourSpike[];
+  source: string;
+  note: string;
+};
+
+export type SimulatorAnalyzeRequest = {
+  symbol: string;
+  side: "long" | "short";
+  entry_type: "market" | "limit";
+  entry_price: number;
+  mark_price: number;
+  margin: number;
+  leverage: number;
+  stop_loss?: number | null;
+  take_profit?: number | null;
+  order_type: "maker" | "taker";
+  timeframe: string;
+};
+
+export type SimulatorAnalyzeResponse = {
+  symbol: string;
+  model: string;
+  used_ai: boolean;
+  analysis: string;
+  warnings: string[];
+};
+
 export type MarketQualityCheck = {
   name: string;
   status: "pass" | "warn" | "fail";

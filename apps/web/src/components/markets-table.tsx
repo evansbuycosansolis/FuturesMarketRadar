@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 import { formatCompactNumber, formatPrice } from "@/lib/formatters";
 import { pionexFuturesUrl } from "@/lib/links";
@@ -203,6 +204,7 @@ export function MarketsTable({ items }: MarketsTableProps) {
                         <div className="text-xs text-[var(--radar-muted)]">{friendlyName(item.symbol)}</div>
                       </div>
                     </a>
+                    <Link className="desk-discuss-link" href={`/desk?symbol=${encodeURIComponent(item.symbol)}`}>Discuss with desk ↗</Link>
                   </td>
                   <td className="px-3 py-4 font-semibold text-[var(--radar-ink)]">{formatPrice(item.price)}</td>
                   <td className="px-3 py-4 font-semibold text-[var(--radar-ink)]">${formatPrice(item.price)}</td>

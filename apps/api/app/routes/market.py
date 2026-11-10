@@ -20,6 +20,8 @@ from ..schemas import (
     MarketSessionMomentumCellRead,
     MarketSessionMomentumRead,
     MarketSessionMomentumResponse,
+    OneHourSpikeRead,
+    OneHourSpikeResponse,
     ScoreEntry,
     SleepingGiantResponse,
     SleepingGiantSetupRead,
@@ -28,6 +30,7 @@ from ..schemas import (
 )
 from ..services.anomaly_scanner import scan_futures_anomalies
 from ..services.binance_futures_client import BinanceFuturesClient
+from ..services.one_hour_spike_scanner import scan_one_hour_spikes
 from ..services.pionex_client import PionexKline
 from ..services.report_service import models_to_score_entry
 from ..services.sleeping_giant_scanner import RecentAwakeningScanner, SleepingGiantConfig, SleepingGiantScanner
@@ -40,6 +43,7 @@ RECOVERY_MAX_LATEST_CHANGE = 20.0
 RECOVERY_START_THRESHOLD = 2.0
 FADE_HIGH_WATERMARK = 40.0
 SLEEPING_GIANT_CACHE_SECONDS = 240
+ONE_HOUR_SPIKE_CACHE_SECONDS = 240
 
 SESSIONS_UTC = [
     ("Asian", 23, 7),
@@ -47,6 +51,7 @@ SESSIONS_UTC = [
     ("New York", 15, 23),
 ]
 _SLEEPING_GIANT_CACHE: dict[tuple[int, int, int, str, str, int], tuple[datetime, SleepingGiantResponse]] = {}
+_ONE_HOUR_SPIKE_CACHE: dict[tuple[int, int, int], tuple[datetime, OneHourSpikeResponse]] = {}
 
 
 def _latest_report_time(db) -> object:
@@ -569,6 +574,80 @@ def futures_anomalies(
             "is stored market snapshots, so 1m/1s fields are approximations until a faster live feed is connected."
         ),
     )
+
+
+@router.get("/market/one-hour-spikes", response_model=OneHourSpikeResponse)
+async def one_hour_spikes(
+    limit: int = Query(default=20, ge=1, le=60),
+    max_symbols: int = Query(default=160, ge=20, le=250),
+    baseline_candles: int = Query(default=48, ge=24, le=120),
+) -> OneHourSpikeResponse:
+    cache_key = (limit, max_symbols, baseline_candles)
+    cached = _ONE_HOUR_SPIKE_CACHE.get(cache_key)
+    if cached:
+        cached_at, cached_response = cached
+        if (datetime.now(timezone.utc) - cached_at).total_seconds() <= ONE_HOUR_SPIKE_CACHE_SECONDS:
+            return cached_response
+
+    with SessionLocal() as db:
+        latest_time = db.scalar(select(func.max(models.MarketSnapshot.timestamp)))
+        if latest_time is None:
+            raise HTTPException(status_code=404, detail="No market snapshots are available yet.")
+        latest_entries = _latest_market_entries(db, latest_time)
+        ranked_symbols = [
+            entry.symbol
+            for entry in sorted(latest_entries, key=lambda entry: entry.quote_volume_24h, reverse=True)[:max_symbols]
+        ]
+        latest_snapshot_prices = {entry.symbol: entry.price for entry in latest_entries}
+
+    binance_client = BinanceFuturesClient(settings)
+    try:
+        candles_by_symbol = await binance_client.get_klines_for_pionex_symbols(
+            ranked_symbols,
+            interval="1h",
+            limit=baseline_candles + 4,
+            max_concurrency=10,
+        )
+    finally:
+        await binance_client.close()
+
+    raw_candidates = scan_one_hour_spikes(
+        candles_by_symbol,
+        limit=limit,
+        baseline_candles=baseline_candles,
+    )
+    response = OneHourSpikeResponse(
+        latest_report_at=latest_time,
+        interval_seconds=300,
+        baseline_candles=baseline_candles,
+        scanned_symbols=len(candles_by_symbol),
+        candidates=[
+            OneHourSpikeRead(
+                symbol=item.symbol,
+                direction="bullish" if item.direction == "bullish" else "bearish",
+                score=item.score,
+                current_price=latest_snapshot_prices.get(item.symbol, item.current_price),
+                latest_price_change_pct=item.latest_price_change_pct,
+                latest_range_pct=item.latest_range_pct,
+                baseline_range_pct=item.baseline_range_pct,
+                range_ratio=item.range_ratio,
+                volume_ratio=item.volume_ratio,
+                latest_volume=item.latest_volume,
+                baseline_volume=item.baseline_volume,
+                timestamp=datetime.fromtimestamp(item.timestamp / 1000, tz=timezone.utc) if item.timestamp else None,
+                reason_tags=item.reason_tags,
+            )
+            for item in raw_candidates
+        ],
+        source="Binance USD-M 1H candles for Pionex-overlapping futures symbols",
+        note=(
+            "Simple 1H spike monitor. It scans tracked Pionex futures symbols on the 5-minute refresh cadence, "
+            "then flags the latest closed 1H candle when both price range/change and volume are abnormal versus the recent median baseline. "
+            "Decision support only; not a buy/sell signal."
+        ),
+    )
+    _ONE_HOUR_SPIKE_CACHE[cache_key] = (datetime.now(timezone.utc), response)
+    return response
 
 
 @router.get("/market/session-momentum", response_model=MarketSessionMomentumResponse)

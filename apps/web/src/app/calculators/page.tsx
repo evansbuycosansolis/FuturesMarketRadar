@@ -1,5 +1,5 @@
-import { TradingCalculatorsPage } from "@/components/trading-calculators-page";
+import { redirect } from "next/navigation";
 
 export default function Calculators() {
-  return <TradingCalculatorsPage />;
+  redirect("/simulator");
 }
